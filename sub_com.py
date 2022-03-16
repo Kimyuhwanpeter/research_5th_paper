@@ -275,8 +275,11 @@ def Combo_loss_dice_focal(y_true, y_pred, class_imbal_labels_buf, crop_buf, weed
 
     # combo_alpha; controls the amount of Dice term contribution (best combo_alpha is 0.5 (from paper))
     combo_alpha = 0.5
-    dice = two_region_dice_loss(y_true, y_pred)
     y_true = tf.cast(y_true, tf.float32)
+    numerator = 2*(tf.reduce_sum(y_true*y_pred) + tf.reduce_sum((1 - y_true)*(1 - y_pred)))
+    denominator = tf.reduce_sum(y_true + y_pred) + tf.reduce_sum(2 - y_true - y_pred)
+    dice = tf.math.divide(numerator, denominator)
+
     if class_imbal_labels_buf[0] < class_imbal_labels_buf[1]:
         ce_w = weed_buf[1]
         alpha = weed_buf[1]
