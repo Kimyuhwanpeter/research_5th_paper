@@ -267,7 +267,7 @@ def binary_focal_loss(gamma=2., alpha=.25):
 def Combo_loss_dice_focal(y_true, y_pred, class_imbal_labels_buf, crop_buf, weed_buf):
 
     # ce_w values smaller than 0.5 penalize false positives more. ce_w values larger than 0.5 panalize false negative more
-    
+    # - (ALPHA * ((targets * K.log(inputs)) + ((1 - ALPHA) * (1.0 - targets) * K.log(1.0 - inputs))) )    
     # (crop-0 (negative), weed-1 (positive))
     # for crop and weed--> if crop > weed; FN
     # for crop and weed--> if crop < weed; FP
@@ -276,30 +276,32 @@ def Combo_loss_dice_focal(y_true, y_pred, class_imbal_labels_buf, crop_buf, weed
     # combo_alpha; controls the amount of Dice term contribution (best combo_alpha is 0.5 (from paper))
     combo_alpha = 0.5
     y_true = tf.cast(y_true, tf.float32)
-    numerator = 2*(tf.reduce_sum(y_true*y_pred) + tf.reduce_sum((1 - y_true)*(1 - y_pred)))
-    denominator = tf.reduce_sum(y_true + y_pred) + tf.reduce_sum(2 - y_true - y_pred)
-    dice = tf.math.divide(numerator, denominator)
+    y_pred = tf.nn.sigmoid(y_pred)
+    numerator = 2*(tf.keras.backend.sum(y_true*y_pred) + tf.keras.backend.sum((1 - y_true)*(1 - y_pred)))
+    denominator = tf.keras.backend.sum(y_true + y_pred) + tf.keras.backend.sum(2 - y_true - y_pred)
+    dice = numerator / denominator
 
+    y_pred = tf.keras.backend.clip(y_pred, tf.keras.backend.epsilon(), 1.0 - tf.keras.backend.epsilon())
     if class_imbal_labels_buf[0] < class_imbal_labels_buf[1]:
         ce_w = weed_buf[1]
         alpha = weed_buf[1]
-        distribution = (ce_w * y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) \
-            + ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2) * tf.math.log(1 - y_pred))
-        distribution = tf.reduce_mean(distribution)
+        distribution = -(ce_w * ((y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) + 
+        ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2) * tf.math.log(1 - y_pred))))
+        distribution = tf.keras.backend.mean(distribution, -1)
         loss = combo_alpha * distribution - ((1 - combo_alpha) * dice)
     elif class_imbal_labels_buf[0] > class_imbal_labels_buf[1]:
         ce_w = crop_buf[1]
         alpha = crop_buf[1]
-        distribution = (ce_w * y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) \
-            + ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2) * tf.math.log(1 - y_pred))
-        distribution = tf.reduce_mean(distribution)
+        distribution = -(ce_w * ((y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) + 
+        ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2) * tf.math.log(1 - y_pred))))
+        distribution = tf.keras.backend.mean(distribution, -1)
         loss = combo_alpha * distribution - ((1 - combo_alpha) * dice)
     else:
         ce_w = 0.5
         alpha = 0.5
-        distribution = (ce_w * y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) \
-            + ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2) * tf.math.log(1 - y_pred))
-        distribution = tf.reduce_mean(distribution)
+        distribution = -(ce_w * ((y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) + 
+        ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2) * tf.math.log(1 - y_pred))))
+        distribution = tf.keras.backend.mean(distribution, -1)
         loss = combo_alpha * distribution - ((1 - combo_alpha) * dice)
 
     return loss
@@ -324,7 +326,7 @@ def cal_loss(model, images, labels, objectiness, class_imbal_labels_buf, object_
         else:
             crop_weed_distri_loss = binary_focal_loss(alpha=weed_buf[0])(crop_weed_labels, tf.nn.sigmoid(crop_weed_logits))
 
-        crop_weed_combo_loss = Combo_loss_dice_focal(crop_weed_labels, tf.nn.sigmoid(crop_weed_logits), class_imbal_labels_buf, crop_buf, weed_buf)
+        crop_weed_combo_loss = Combo_loss_dice_focal(crop_weed_labels, crop_weed_logits, class_imbal_labels_buf, crop_buf, weed_buf)
 
         total_loss = object_loss + crop_weed_dice_loss + crop_weed_distri_loss + crop_weed_combo_loss
         
