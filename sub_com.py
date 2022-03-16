@@ -277,33 +277,35 @@ def Combo_loss_dice_focal(y_true, y_pred, class_imbal_labels_buf, crop_buf, weed
     combo_alpha = 0.5
     y_true = tf.cast(y_true, tf.float32)
     y_pred = tf.nn.sigmoid(y_pred)
-    numerator = 2*(tf.keras.backend.sum(y_true*y_pred) + tf.keras.backend.sum((1 - y_true)*(1 - y_pred)))
+    numerator = 2*(tf.keras.backend.sum(y_true*y_pred) + tf.keras.backend.sum((1 - y_true)*(1 - y_pred)))       # crop dice ; weed dice devide!!!!!!!!!!!!!!
     denominator = tf.keras.backend.sum(y_true + y_pred) + tf.keras.backend.sum(2 - y_true - y_pred)
-    dice = numerator / denominator
+    dice = 1 - (numerator / denominator)
 
     y_pred = tf.keras.backend.clip(y_pred, tf.keras.backend.epsilon(), 1.0 - tf.keras.backend.epsilon())
     if class_imbal_labels_buf[0] < class_imbal_labels_buf[1]:
         ce_w = weed_buf[1]
         alpha = weed_buf[1]
         distribution = -(ce_w * ((y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) + 
-        ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2) * tf.math.log(1 - y_pred))))
-        distribution = tf.keras.backend.mean(distribution, -1)
-        loss = combo_alpha * distribution - ((1 - combo_alpha) * dice)
+        ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2.) * tf.math.log(1 - y_pred))))
+        distribution = tf.keras.backend.mean(distribution, axis=-1)
+        loss = (combo_alpha * distribution) + ((1 - combo_alpha) * dice)
     elif class_imbal_labels_buf[0] > class_imbal_labels_buf[1]:
         ce_w = crop_buf[1]
         alpha = crop_buf[1]
         distribution = -(ce_w * ((y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) + 
-        ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2) * tf.math.log(1 - y_pred))))
-        distribution = tf.keras.backend.mean(distribution, -1)
-        loss = combo_alpha * distribution - ((1 - combo_alpha) * dice)
+        ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2.) * tf.math.log(1 - y_pred))))
+        distribution = tf.keras.backend.mean(distribution, axis=-1)
+        loss = (combo_alpha * distribution) + ((1 - combo_alpha) * dice)
     else:
         ce_w = 0.5
         alpha = 0.5
         distribution = -(ce_w * ((y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) + 
-        ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2) * tf.math.log(1 - y_pred))))
-        distribution = tf.keras.backend.mean(distribution, -1)
-        loss = combo_alpha * distribution - ((1 - combo_alpha) * dice)
+        ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2.) * tf.math.log(1 - y_pred))))
+        distribution = tf.keras.backend.mean(distribution, axis=-1)
+        loss = (combo_alpha * distribution) + ((1 - combo_alpha) * dice)
 
+    # print(distribution)
+    # print(dice)
     return loss
 
 def cal_loss(model, images, labels, objectiness, class_imbal_labels_buf, object_buf, crop_buf, weed_buf):
@@ -327,8 +329,10 @@ def cal_loss(model, images, labels, objectiness, class_imbal_labels_buf, object_
             crop_weed_distri_loss = binary_focal_loss(alpha=weed_buf[0])(crop_weed_labels, tf.nn.sigmoid(crop_weed_logits))
 
         crop_weed_combo_loss = Combo_loss_dice_focal(crop_weed_labels, crop_weed_logits, class_imbal_labels_buf, crop_buf, weed_buf)
+        # print(crop_weed_combo_loss)
 
         total_loss = object_loss + crop_weed_dice_loss + crop_weed_distri_loss + crop_weed_combo_loss
+        
         
     grads = tape.gradient(total_loss, model.trainable_variables)
     optim.apply_gradients(zip(grads, model.trainable_variables))
