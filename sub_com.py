@@ -1,13 +1,13 @@
 # -*- coding:utf-8 -*-
 from charset_normalizer import from_bytes
-# from base_UNET import *
+from base_UNET import *
 # from modified_deeplab_V3 import *
 from paper5th_model import *
 from PFB_measurement import Measurement
 from random import shuffle, random
 from tensorflow.keras import backend as K
-from keras_flops import get_flops
-from model_profiler import model_profiler
+# from keras_flops import get_flops
+# from model_profiler import model_profiler
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -40,7 +40,7 @@ FLAGS = easydict.EasyDict({"img_size": 512,
 
                            "ignore_label": 0,
 
-                           "batch_size": 2,
+                           "batch_size": 4,
 
                            "sample_images": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/V3/rice_seedling_weed/sample_images",
 
@@ -285,22 +285,19 @@ def Combo_loss_dice_focal(y_true, y_pred, class_imbal_labels_buf, crop_buf, weed
     if class_imbal_labels_buf[0] < class_imbal_labels_buf[1]:
         ce_w = weed_buf[1]
         alpha = weed_buf[1]
-        distribution = -(ce_w * ((y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) + 
-        ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2.) * tf.math.log(1 - y_pred))))
+        distribution = -(ce_w * (y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) + ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2.) * tf.math.log(1 - y_pred)))
         distribution = tf.keras.backend.mean(distribution, axis=-1)
         loss = (combo_alpha * distribution) + ((1 - combo_alpha) * dice)
     elif class_imbal_labels_buf[0] > class_imbal_labels_buf[1]:
         ce_w = crop_buf[1]
         alpha = crop_buf[1]
-        distribution = -(ce_w * ((y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) + 
-        ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2.) * tf.math.log(1 - y_pred))))
+        distribution = -(ce_w * (y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) + ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2.) * tf.math.log(1 - y_pred)))
         distribution = tf.keras.backend.mean(distribution, axis=-1)
         loss = (combo_alpha * distribution) + ((1 - combo_alpha) * dice)
     else:
         ce_w = 0.5
         alpha = 0.5
-        distribution = -(ce_w * ((y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) + 
-        ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2.) * tf.math.log(1 - y_pred))))
+        distribution = -(ce_w * (y_true * alpha * tf.math.pow(1. - y_pred, 2.) * tf.math.log(y_pred)) + ((1 - ce_w) * (1 - y_true) * (1 - alpha) * tf.math.pow(y_pred, 2.) * tf.math.log(1 - y_pred)))
         distribution = tf.keras.backend.mean(distribution, axis=-1)
         loss = (combo_alpha * distribution) + ((1 - combo_alpha) * dice)
 
@@ -329,9 +326,25 @@ def cal_loss(model, images, labels, objectiness, class_imbal_labels_buf, object_
             crop_weed_distri_loss = binary_focal_loss(alpha=weed_buf[0])(crop_weed_labels, tf.nn.sigmoid(crop_weed_logits))
 
         crop_weed_combo_loss = Combo_loss_dice_focal(crop_weed_labels, crop_weed_logits, class_imbal_labels_buf, crop_buf, weed_buf)
-        # print(crop_weed_combo_loss)
 
-        total_loss = object_loss + crop_weed_dice_loss + crop_weed_distri_loss + crop_weed_combo_loss
+        ##############################################################################################################################
+        only_background_output  = tf.where(objectiness == 0, 1. - tf.nn.sigmoid(logits[:, 1]), logits[:, 0]).numpy()
+        only_background_indices = tf.where(objectiness == 0).numpy()
+        only_background_logits = tf.gather(only_background_output, only_background_indices)
+        only_background_loss = tf.reduce_mean( -tf.math.log(only_background_logits + tf.keras.backend.epsilon()) )
+
+        only_crop_output = tf.where(batch_labels == 0, 1. - tf.nn.sigmoid(logits[:, 0]), logits[:, 1])
+        only_crop_indices = tf.where(batch_labels == 0).numpy()
+        only_crop_logits = tf.gather(only_crop_output, only_crop_indices)
+        only_crop_loss = tf.reduce_mean( -tf.math.log(only_crop_logits + tf.keras.backend.epsilon()) )
+
+        only_weed_output = tf.where(batch_labels == 1, tf.nn.sigmoid(logits[:, 0]), logits[:, 1])
+        only_weed_indices = tf.where(batch_labels == 1).numpy()
+        only_weed_logits = tf.gather(only_weed_output, only_weed_indices)
+        only_weed_loss = tf.reduce_mean( -tf.math.log(only_weed_logits + tf.keras.backend.epsilon()) )
+        ##############################################################################################################################
+
+        total_loss = object_loss + crop_weed_dice_loss + crop_weed_distri_loss + crop_weed_combo_loss + only_background_loss + only_crop_loss + only_weed_loss
         
         
     grads = tape.gradient(total_loss, model.trainable_variables)
@@ -344,7 +357,7 @@ def cal_loss(model, images, labels, objectiness, class_imbal_labels_buf, object_
 def main():
     tf.keras.backend.clear_session()
 
-    model = Depth_wise_Unet(input_shape=(FLAGS.img_size, FLAGS.img_size, 3))    # model is too heavy
+    model = Unet(input_shape=(FLAGS.img_size, FLAGS.img_size, 3), classes=1)    # model is too heavy
 
     # Tomorrow need to fix layers!!! remember!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 
