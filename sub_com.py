@@ -16,15 +16,15 @@ import os
 
 FLAGS = easydict.EasyDict({"img_size": 512,
 
-                           "train_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/rice_seedling_and_weed_dataset/train_fix.txt",
+                           "train_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/train.txt",
 
-                           "val_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/rice_seedling_and_weed_dataset/val.txt",
+                           "val_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/val.txt",
 
-                           "test_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/rice_seedling_and_weed_dataset/test.txt",
+                           "test_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/test.txt",
                            
-                           "label_path": "/yuwhan/yuwhan/Dataset/Segmentation/rice_seedling_and_weed_dataset/aug_label_mask/",
+                           "label_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/raw_aug_gray_mask/",
                            
-                           "image_path": "/yuwhan/yuwhan/Dataset/Segmentation/rice_seedling_and_weed_dataset/aug_image/",
+                           "image_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/raw_aug_rgb_img/",
                            
                            "pre_checkpoint": False,
                            
@@ -42,11 +42,11 @@ FLAGS = easydict.EasyDict({"img_size": 512,
 
                            "batch_size": 4,
 
-                           "sample_images": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/V3/rice_seedling_weed/sample_images",
+                           "sample_images": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/V3/BoniRob/sample_images",
 
-                           "save_checkpoint": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/V3/rice_seedling_weed/checkpoint",
+                           "save_checkpoint": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/V3/BoniRob/checkpoint",
 
-                           "save_print": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/V3/rice_seedling_weed/train_out.txt",
+                           "save_print": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/V3/BoniRob/train_out.txt",
 
                            "train_loss_graphs": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/V2/CWFID/train_loss.txt",
 
