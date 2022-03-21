@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 from charset_normalizer import from_bytes
+from base_UNET_v2 import *
 from base_UNET import *
 # from modified_deeplab_V3 import *
 from paper5th_model import *
@@ -28,7 +29,7 @@ FLAGS = easydict.EasyDict({"img_size": 512,
                            
                            "pre_checkpoint": False,
                            
-                           "pre_checkpoint_path": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/V2/CWFID/checkpoint/226",
+                           "pre_checkpoint_path": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/V3/BoniRob/checkpoint/399",
                            
                            "lr": 0.0001,
 
@@ -305,12 +306,24 @@ def Combo_loss_dice_focal(y_true, y_pred, class_imbal_labels_buf, crop_buf, weed
     # print(dice)
     return loss
 
-def cal_loss(model, images, labels, objectiness, class_imbal_labels_buf, object_buf, crop_buf, weed_buf):
+def cal_loss(model, model2, images, labels, objectiness, class_imbal_labels_buf, object_buf, crop_buf, weed_buf):
 
-    with tf.GradientTape() as tape: # channel ==> 2
+    with tf.GradientTape() as tape: # channel ==> 1
 
         batch_labels = tf.reshape(labels, [-1,])
-        logits = run_model(model, images, True)
+        raw_logits = run_model(model, images, True)
+        label_objectiness = tf.cast(tf.reshape(objectiness, [-1,]), tf.float32)
+        logit_objectiness = tf.reshape(raw_logits, [-1,], tf.float32)
+
+        total_loss = true_dice_loss(label_objectiness, logit_objectiness)
+
+    grads = tape.gradient(total_loss, model.trainable_variables)
+    optim.apply_gradients(zip(grads, model.trainable_variables))
+
+    with tf.GradientTape() as tape2: # channel ==> 2
+
+        batch_labels = tf.reshape(labels, [-1,])
+        logits = run_model(model2, images * tf.nn.sigmoid(raw_logits), True)
         logits = tf.reshape(logits, [-1, FLAGS.total_classes-1])
         objectiness = np.where(batch_labels == 2, 0, 1)
         object_loss = true_dice_loss(objectiness, logits[:, 1])
@@ -347,8 +360,8 @@ def cal_loss(model, images, labels, objectiness, class_imbal_labels_buf, object_
         total_loss = object_loss + crop_weed_dice_loss + crop_weed_distri_loss + crop_weed_combo_loss + only_background_loss + only_crop_loss + only_weed_loss
         
         
-    grads = tape.gradient(total_loss, model.trainable_variables)
-    optim.apply_gradients(zip(grads, model.trainable_variables))
+    grads = tape2.gradient(total_loss, model2.trainable_variables)
+    optim2.apply_gradients(zip(grads, model2.trainable_variables))
 
     return total_loss
 
@@ -357,11 +370,12 @@ def cal_loss(model, images, labels, objectiness, class_imbal_labels_buf, object_
 def main():
     tf.keras.backend.clear_session()
 
-    model = Unet(input_shape=(FLAGS.img_size, FLAGS.img_size, 3), classes=1)    # model is too heavy
+    model = Unet(input_shape=(FLAGS.img_size, FLAGS.img_size, 3), classes=1)
+    model2 = fix_Unet(input_shape=(FLAGS.img_size, FLAGS.img_size, 3), classes=1)    # model is too heavy
 
     # Tomorrow need to fix layers!!! remember!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
-
     model.summary()
+    model2.summary()
 
     if FLAGS.pre_checkpoint:
         ckpt = tf.train.Checkpoint(model=model, optim=optim)
@@ -446,14 +460,15 @@ def main():
 
                 objectiness = np.where(batch_labels == 2, 0, 1)  # 피사체가 있는곳은 1 없는곳은 0으로 만들어준것
 
-                loss = cal_loss(model, batch_images, batch_labels, objectiness, class_imbal_labels_buf, object_buf, crop_buf, weed_buf)
+                loss = cal_loss(model, model2, batch_images, batch_labels, objectiness, class_imbal_labels_buf, object_buf, crop_buf, weed_buf)
 
                 if count % 10 == 0:
                     print("Epoch: {} [{}/{}] loss = {}".format(epoch, step+1, tr_idx, loss))
 
                 if count % 100 == 0:
 
-                    output = run_model(model, batch_images, False)
+                    raw_logits = run_model(model, batch_images, False)
+                    output = run_model(model2, batch_images * tf.nn.sigmoid(raw_logits), False)
                     object_output = tf.nn.sigmoid(output[:, :, :, 1])
                     crop_weed_output = tf.nn.sigmoid(output[:, :, :, 0])
                     for i in range(FLAGS.batch_size):
@@ -494,7 +509,8 @@ def main():
                 batch_images, _, batch_labels = next(tr_iter)
                 for j in range(FLAGS.batch_size):
                     batch_image = tf.expand_dims(batch_images[j], 0)
-                    output = run_model(model, batch_image, False)
+                    raw_logits = run_model(model, batch_image, False)
+                    output = run_model(model2, batch_image * tf.nn.sigmoid(raw_logits), False)
                     object_output = tf.nn.sigmoid(output[0, :, :, 1])
                     object_output = tf.where(object_output >= 0.5, 1, 0).numpy()
                     false_object_indices = np.where(object_output == 0)
@@ -557,7 +573,8 @@ def main():
                 batch_images, batch_labels = next(val_iter)
                 for j in range(1):
                     batch_image = tf.expand_dims(batch_images[j], 0)
-                    output = run_model(model, batch_image, False)
+                    raw_logits = run_model(model, batch_image, False)
+                    output = run_model(model2, batch_image * tf.nn.sigmoid(raw_logits), False)
                     object_output = tf.nn.sigmoid(output[0, :, :, 1])
                     object_output = tf.where(object_output >= 0.5, 1, 0).numpy()
                     false_object_indices = np.where(object_output == 0)
@@ -616,7 +633,8 @@ def main():
                 batch_images, batch_labels = next(test_iter)
                 for j in range(1):
                     batch_image = tf.expand_dims(batch_images[j], 0)
-                    output = run_model(model, batch_image, False)
+                    raw_logits = run_model(model, batch_image, False)
+                    output = run_model(model2, batch_image * tf.nn.sigmoid(raw_logits), False)
                     object_output = tf.nn.sigmoid(output[0, :, :, 1])
                     object_output = tf.where(object_output >= 0.5, 1, 0).numpy()
                     false_object_indices = np.where(object_output == 0)
@@ -672,7 +690,7 @@ def main():
             if not os.path.isdir(model_dir):
                 print("Make {} folder to store the weight!".format(epoch))
                 os.makedirs(model_dir)
-            ckpt = tf.train.Checkpoint(model=model, optim=optim)
+            ckpt = tf.train.Checkpoint(model=model, model2=model2, optim=optim, optim2=optim2)
             ckpt_dir = model_dir + "/Crop_weed_model_{}.ckpt".format(epoch)
             ckpt.save(ckpt_dir)
     else:
