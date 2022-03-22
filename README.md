@@ -5,4 +5,7 @@
 Segmentation)
 * rice seedling and weed 는 뺴고 새로운 데이터 2개로 진행
 * 현재 BoniRob dataset에 관해 sub (0 ~ 1 normalization)and main (stddev normalization)컴에서 실험하고있음
-* Let's add 1st model as 4th paper
+* **Let's add 1st model as 4th paper**
+<br/>
+
+* Main Com - cross; Sub com - only region based
