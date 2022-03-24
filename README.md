@@ -8,4 +8,4 @@ Segmentation)
 * **Let's add 1st model as 4th paper**
 <br/>
 
-* Main Com - cross; Sub com - only region based
+* 저조도 영상으로 실험하는중
