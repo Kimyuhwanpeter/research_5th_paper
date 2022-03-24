@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 import tensorflow as tf
-from base_UNET import *
+from modified_Unet_model import *
 from PFB_measurement_related import Measurement
 from random import shuffle, random
 
@@ -151,7 +151,7 @@ def main():
     # 학습이미지에 대해 online augmentation을 진행--> 전처리로서 필터링을 하던지 해서 , 피사체에 대한 high frequency 성분을
     # 가지고오자
     #model = PFB_model(input_shape=(FLAGS.img_size, FLAGS.img_size, 3), OUTPUT_CHANNELS=FLAGS.total_classes-1)\
-    model = Unet(input_shape=(FLAGS.img_size, FLAGS.img_size, 3), classes=FLAGS.total_classes)
+    model = modified_Unet(input_shape=(FLAGS.img_size, FLAGS.img_size, 3), classes=FLAGS.total_classes)
 
     #out = model.get_layer("activation_decoder_2_upsample").output
     #out = tf.keras.layers.Conv2D(FLAGS.total_classes-1, (1,1), name="output_layer")(out)
