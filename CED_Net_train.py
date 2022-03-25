@@ -10,11 +10,11 @@ FLAGS = easydict.EasyDict({"img_size_1": 448,
                            
                            "img_size_2": 896,
 
-                           "tr_txt": "D:/[1]DB/[5]4th_paper_DB/crop_weed/datasets_IJRR2017/train.txt",
+                           "tr_txt": "/content/train.txt",
                            
-                           "tr_lab_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/datasets_IJRR2017/raw_aug_gray_mask",
+                           "tr_lab_path": "/content/raw_aug_gray_mask",
                            
-                           "tr_img_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/datasets_IJRR2017/low_light2",
+                           "tr_img_path": "/content/low_light2",
                            
                            "pre_checkpoint": False,
 
@@ -84,13 +84,14 @@ def true_dice_loss(y_true, y_pred):
 
     return 1 - tf.math.divide(numerator, denominator)
 
-def cal_loss(m1, batch_images, batch_labels):
+@tf.function
+def cal_loss(m, batch_images, batch_labels):
 
     with tf.GradientTape() as tape:
 
         batch_labels = tf.reshape(batch_labels, [-1,])
 
-        logits = run_model(model, batch_images, True)
+        logits = m(batch_images, True)
         logits = tf.reshape(logits, [-1,])
 
         loss = true_dice_loss(batch_labels, logits)
