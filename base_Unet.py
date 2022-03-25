@@ -72,42 +72,8 @@ def DecoderTransposeX2Block(filters, stage, use_batchnorm=False):
     concat_name = 'decoder_stage{}_concat'.format(stage)
 
     # concat_axis = bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
-    concat_axis = bn_axis = 3
-
-    def layer(input_tensor, skip=None):
-
-        x = tf.keras.layers.Conv2DTranspose(
-            filters,
-            kernel_size=(4, 4),
-            strides=(2, 2),
-            padding='same',
-            name=transp_name,
-            use_bias=not use_batchnorm,
-        )(input_tensor)
-
-        if use_batchnorm:
-            x = tf.keras.layers.BatchNormalization(axis=bn_axis, name=bn_name)(x)
-
-        x = tf.keras.layers.Activation('relu', name=relu_name)(x)
-
-        if skip is not None:
-            x = tf.keras.layers.Concatenate(axis=concat_axis, name=concat_name)([x, skip])
-
-        x = Conv3x3BnReLU(filters, use_batchnorm, name=conv_block_name)(x)
-
-        return x
-
-    return layer
-
-def DecoderTransposeX2Block_object(filters, stage, use_batchnorm=False):
-    transp_name = 'decoder_stage{}a_transpose_object'.format(stage)
-    bn_name = 'decoder_stage{}a_bn_object'.format(stage)
-    relu_name = 'decoder_stage{}a_relu_object'.format(stage)
-    conv_block_name = 'decoder_stage{}b_object'.format(stage)
-    concat_name = 'decoder_stage{}_concat_object'.format(stage)
-
-    # concat_axis = bn_axis = 3 if backend.image_data_format() == 'channels_last' else 1
-    concat_axis = bn_axis = 3
+    concat_axis = 3
+    bn_axis = 3
 
     def layer(input_tensor, skip=None):
 
@@ -158,8 +124,7 @@ def build_unet(
     if isinstance(backbone.layers[-1], tf.keras.layers.MaxPooling2D):
         x = Conv3x3BnReLU(512, use_batchnorm, name='center_block1')(x)
         x = Conv3x3BnReLU(512, use_batchnorm, name='center_block2')(x)
-    x_ = x
-    decoder_filters_ = (512, 256, 128, 64, 32)
+
     # building decoder blocks
     for i in range(n_upsample_blocks):
 
@@ -168,36 +133,17 @@ def build_unet(
         else:
             skip = None
 
-        x = DecoderTransposeX2Block_object(decoder_filters[i], stage=i, use_batchnorm=use_batchnorm)(x, skip)
+        x = decoder_block(decoder_filters[i], stage=i, use_batchnorm=use_batchnorm)(x, skip)
 
-    for i in range(n_upsample_blocks):
-
-        if i < len(skips):
-            skip = skips[i]
-        else:
-            skip = None
-
-        x_ = DecoderTransposeX2Block(decoder_filters_[i], stage=i, use_batchnorm=use_batchnorm)(x_, skip)
-    x_ = x_ * tf.reduce_mean(tf.nn.sigmoid(x), -1, keepdims=True)
     # model head (define number of output classes)
     x = tf.keras.layers.Conv2D(
         filters=classes,
         kernel_size=(3, 3),
         padding='same',
         use_bias=True,
-        kernel_initializer='glorot_uniform'
+        kernel_initializer='glorot_uniform',
+        name='final_conv',
     )(x)
-
-    x_ = tf.keras.layers.Conv2D(
-        filters=classes,
-        kernel_size=(3, 3),
-        padding='same',
-        use_bias=True,
-        kernel_initializer='glorot_uniform'
-    )(x_)
-
-    x = tf.concat([x_, x], -1, name="final_conv")
-
 
     # create keras model instance
     model = tf.keras.Model(input_, x)
@@ -233,7 +179,7 @@ def Unet(
     backbone = Backbones.get_backbone(
         backbone_name,
         input_shape=input_shape,
-        weights=encoder_weights,
+        weights=encoder_weights,    #weights=encoder_weights,
         include_top=False,
         **kwargs,
     )
@@ -261,12 +207,3 @@ def Unet(
         model.load_weights(weights)
 
     return model
-
-# from model_profiler import model_profiler
-
-# model = Unet(input_shape=(512, 512, 3))
-# model.summary()
-# model_pro = model_profiler(model, 8)
-# print(model_pro)
-
-
