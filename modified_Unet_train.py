@@ -12,21 +12,21 @@ import os
 
 FLAGS = easydict.EasyDict({"img_size": 512,
 
-                           "train_txt_path": "/yuhwan/yuhwan/Dataset/Segmentation/Crop_weed/datasets_IJRR2017/train.txt",
+                           "train_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/train.txt",
 
-                           "val_txt_path": "/yuhwan/yuhwan/Dataset/Segmentation/Crop_weed/datasets_IJRR2017/val.txt",
+                           "val_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/val.txt",
 
-                           "test_txt_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/rice seedling and weed dataset/test.txt",
+                           "test_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/test.txt",
                            
-                           "label_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/rice seedling and weed dataset/aug_label_mask/",
+                           "label_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/raw_aug_gray_mask/",
                            
-                           "image_path": "D:/[1]DB/[5]4th_paper_DB/crop_weed/rice seedling and weed dataset/aug_image/",
+                           "image_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/low_light2/",
                            
-                           "pre_checkpoint": True,
+                           "pre_checkpoint": False,
                            
                            "pre_checkpoint_path": "C:/Users/Yuhwan/Downloads/74/74",
                            
-                           "lr": 0.00001,
+                           "lr": 0.0001,
 
                            "min_lr": 1e-7,
                            
@@ -38,15 +38,15 @@ FLAGS = easydict.EasyDict({"img_size": 512,
 
                            "batch_size": 2,
 
-                           "sample_images": "/yuhwan/yuhwan/checkpoint/Segmenation/related_UNET/BoniRob/sample_images",
+                           "sample_images": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/modified_Unet/BoniRob_low_light/sample_images",
 
-                           "save_checkpoint": "/yuhwan/yuhwan/checkpoint/Segmenation/related_UNET/BoniRob/checkpoint",
+                           "save_checkpoint": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/modified_Unet/BoniRob_low_light/checkpoint",
 
-                           "save_print": "/yuhwan/yuhwan/checkpoint/Segmenation/related_UNET/BoniRob/train_out.txt",
+                           "save_print": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/modified_Unet/BoniRob_low_light/train_out.txt",
 
                            "test_images": "D:/[1]DB/[5]4th_paper_DB/crop_weed/related_work/Unet/rice_seedling_weed/test_images",
 
-                           "train": False})
+                           "train": True})
 
 
 optim = tf.keras.optimizers.Adam(FLAGS.lr, beta_1=0.9, beta_2=0.99)
@@ -293,6 +293,10 @@ def main():
                                         shape=[FLAGS.img_size*FLAGS.img_size, ], 
                                         total_classes=FLAGS.total_classes).MIOU()
 
+                    miou += miou_
+                    crop_iou += crop_iou_
+                    weed_iou += weed_iou_
+
             miou_ = miou[0,0]/(miou[0,0] + miou[0,1] + miou[1,0])
             crop_iou_ = crop_iou[0,0]/(crop_iou[0,0] + crop_iou[0,1] + crop_iou[1,0])
             weed_iou_ = weed_iou[0,0]/(weed_iou[0,0] + weed_iou[0,1] + weed_iou[1,0])
@@ -319,6 +323,8 @@ def main():
             output_text.write("%.4f" % (f1_score_))
             output_text.write(", train sensitivity: ")
             output_text.write("%.4f" % (recall_))
+            output_text.write(", train precision: ")
+            output_text.write("%.4f" % (precision_))
             output_text.write("\n")
 
             val_iter = iter(val_ge)
@@ -347,6 +353,10 @@ def main():
                                         shape=[FLAGS.img_size*FLAGS.img_size, ], 
                                         total_classes=FLAGS.total_classes).MIOU()
 
+                    miou += miou_
+                    crop_iou += crop_iou_
+                    weed_iou += weed_iou_
+
             miou_ = miou[0,0]/(miou[0,0] + miou[0,1] + miou[1,0])
             crop_iou_ = crop_iou[0,0]/(crop_iou[0,0] + crop_iou[0,1] + crop_iou[1,0])
             weed_iou_ = weed_iou[0,0]/(weed_iou[0,0] + weed_iou[0,1] + weed_iou[1,0])
@@ -369,6 +379,8 @@ def main():
             output_text.write("%.4f" % (f1_score_))
             output_text.write(", val sensitivity: ")
             output_text.write("%.4f" % (recall_))
+            output_text.write(", val precision: ")
+            output_text.write("%.4f" % (precision_))
             output_text.write("\n")
 
             test_iter = iter(test_ge)
@@ -392,7 +404,7 @@ def main():
                     batch_label = np.where(batch_label == 255, 0, batch_label)
                     batch_label = np.where(batch_label == 128, 1, batch_label)
 
-                    miou_, crop_iou_, weed_iou_ = Measurement(predict=image,
+                    miou_, crop_iou_, weed_iou_ = Measurement(predict=predict_image,
                                         label=batch_label, 
                                         shape=[FLAGS.img_size*FLAGS.img_size, ], 
                                         total_classes=FLAGS.total_classes).MIOU()
@@ -424,6 +436,8 @@ def main():
             output_text.write("%.4f" % (f1_score_))
             output_text.write(", test sensitivity: ")
             output_text.write("%.4f" % (recall_))
+            output_text.write(", test precision: ")
+            output_text.write("%.4f" % (precision_))
             output_text.write("\n")
             output_text.write("===================================================================")
             output_text.write("\n")
@@ -449,13 +463,11 @@ def main():
 
         test_iter = iter(test_ge)
         miou = 0.
-        f1_score = 0.
-        tdr = 0.
-        sensitivity = 0.
+        f1_score_ = 0.
         crop_iou = 0.
         weed_iou = 0.
-        pre_ = 0.
-        TP_, TN_, FP_, FN_ = 0, 0, 0, 0
+        recall_ = 0.
+        precision_ = 0.
         for i in range(len(test_img_dataset)):
             batch_images, nomral_img, batch_labels = next(test_iter)
             batch_labels = tf.squeeze(batch_labels, -1)
@@ -472,11 +484,10 @@ def main():
                 batch_label = np.where(batch_label == 255, 0, batch_label)
                 batch_label = np.where(batch_label == 128, 1, batch_label)
 
-                output_confusion, temp_output_3D = Measurement(predict=predict_image,
-                                        label=batch_label,
-                                        shape=[FLAGS.img_size*FLAGS.img_size, ],
-                                        total_classes=FLAGS.total_classes).show_confusion()
-                output_confusion_ = output_confusion
+                miou_, crop_iou_, weed_iou_ = Measurement(predict=predict_image,
+                                    label=batch_label, 
+                                    shape=[FLAGS.img_size*FLAGS.img_size, ], 
+                                    total_classes=FLAGS.total_classes).MIOU()
 
                 pred_mask_color = color_map[predict_image]  # 논문그림처럼 할것!
                 batch_label = np.expand_dims(batch_label, -1)
@@ -493,20 +504,27 @@ def main():
                 pred_mask_warping = np.where(temp_img == np.array([1,1,1], dtype=np.uint8), np.array([0, 0, 255], dtype=np.uint8), pred_mask_warping)
                 pred_mask_warping /= 255.
 
-                output_confusion_warp = np.where(temp_output_3D == np.array([0,0,0], dtype=np.uint8), nomral_img[j], temp_output_3D)
-                output_confusion_warp = np.where(temp_output_3D == np.array([10,10,10], dtype=np.uint8), np.array([255, 0, 0], dtype=np.uint8), output_confusion_warp)
-                output_confusion_warp = np.where(temp_output_3D == np.array([20,20,20], dtype=np.uint8), np.array([0, 255, 255], dtype=np.uint8), output_confusion_warp)
-                output_confusion_warp = np.where(temp_output_3D == np.array([30,30,30], dtype=np.uint8), np.array([255, 0, 255], dtype=np.uint8), output_confusion_warp)
-                output_confusion_warp = np.where(temp_output_3D == np.array([40,40,40], dtype=np.uint8), np.array([255, 255, 0], dtype=np.uint8), output_confusion_warp)
-                output_confusion_warp = np.array(output_confusion_warp, dtype=np.int32)
-                output_confusion_warp = output_confusion_warp / 255
-
                 name = test_img_dataset[i].split("/")[-1].split(".")[0]
                 plt.imsave(FLAGS.test_images + "/" + name + "_label.png", label_mask_color)
                 plt.imsave(FLAGS.test_images + "/" + name + "_predict.png", pred_mask_color)
                 plt.imsave(FLAGS.test_images + "/" + name + "_predict_warp.png", pred_mask_warping[0])
-                plt.imsave(FLAGS.test_images + "/" + name + "_output_confusion.png", output_confusion)
-                plt.imsave(FLAGS.test_images + "/" + name + "output_confusion_warp.png", output_confusion_warp)
+
+                miou += miou_
+                crop_iou += crop_iou_
+                weed_iou += weed_iou_
+
+        miou_ = miou[0,0]/(miou[0,0] + miou[0,1] + miou[1,0])
+        crop_iou_ = crop_iou[0,0]/(crop_iou[0,0] + crop_iou[0,1] + crop_iou[1,0])
+        weed_iou_ = weed_iou[0,0]/(weed_iou[0,0] + weed_iou[0,1] + weed_iou[1,0])
+        recall_ = miou[0,0] / (miou[0,0] + miou[0,1])
+        precision_ = miou[0,0] / (miou[0,0] + miou[1,0])
+        f1_score_ = (2*precision_*recall_) / (precision_ + recall_)
+        print("test mIoU = %.4f (crop_iou = %.4f, weed_iou = %.4f), test F1_score = %.4f, test sensitivity(recall) = %.4f, test precision = %.4f" % (miou_,
+                                                                                                                                            crop_iou_,
+                                                                                                                                            weed_iou_,
+                                                                                                                                            f1_score_,
+                                                                                                                                            recall_,
+                                                                                                                                            precision_))
 
 
 if __name__ == "__main__":
