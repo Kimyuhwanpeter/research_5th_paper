@@ -8,4 +8,5 @@ Segmentation)
 * **Let's add 1st model as 4th paper**
 <br/>
 
-* 저조도 영상으로 실험하는중
+* 저조도 영상으로 실험하는중 (본 실험은 거의끝났고 비교실험중)
+* CED_Net_train.py에서 shape error 고쳐야함
