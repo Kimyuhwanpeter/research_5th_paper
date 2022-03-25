@@ -716,7 +716,6 @@ def main():
         weed_iou = 0.
         recall_ = 0.
         precision_ = 0.
-        f1_score_ = 0.
         for i in range(len(test_img_dataset)):
             batch_images, nomral_img, batch_labels = next(test_iter)
             batch_labels = tf.squeeze(batch_labels, -1)
@@ -732,13 +731,11 @@ def main():
                 crop_weed_output[false_object_indices] = 2
                 image = crop_weed_output
 
-
                 batch_label = batch_labels[j]
                 batch_label = tf.cast(batch_labels[j], tf.uint8).numpy()
                 batch_label = np.where(batch_label == FLAGS.ignore_label, 2, batch_label)    # 2 is void
                 batch_label = np.where(batch_label == 255, 0, batch_label)
                 batch_label = np.where(batch_label == 128, 1, batch_label)
-
 
                 miou_, crop_iou_, weed_iou_ = Measurement(predict=image,
                                     label=batch_label, 
