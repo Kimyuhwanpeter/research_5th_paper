@@ -56,7 +56,7 @@ def tr_func_C1(img_path, lab_path):
     img_C1 = tf.image.resize(img, [FLAGS.img_size_1, FLAGS.img_size_1])
 
     lab = tf.io.read_file(lab_path)
-    lab = tf.image.decode_png(lab, 3)
+    lab = tf.image.decode_png(lab, 1)
     lab_C1 = tf.image.resize(lab, [FLAGS.img_size_1, FLAGS.img_size_1], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     lab_C1 = tf.image.convert_image_dtype(lab_C1, tf.uint8)
 
@@ -70,7 +70,7 @@ def tr_func_C2(img_path, lab_path):
     img_C1 = tf.image.resize(img, [FLAGS.img_size_1, FLAGS.img_size_1])
 
     lab = tf.io.read_file(lab_path)
-    lab = tf.image.decode_png(lab, 3)
+    lab = tf.image.decode_png(lab, 1)
     lab_C2 = tf.image.resize(lab, [FLAGS.img_size_2, FLAGS.img_size_2], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     lab_C2 = tf.image.convert_image_dtype(lab_C2, tf.uint8)
 
@@ -85,19 +85,22 @@ def true_dice_loss(y_true, y_pred):
     return 1 - tf.math.divide(numerator, denominator)
 
 @tf.function
+def run_model(model, images, training):
+    return model(images, training)
+
 def cal_loss(m, batch_images, batch_labels):
 
     with tf.GradientTape() as tape:
 
         batch_labels = tf.reshape(batch_labels, [-1,])
 
-        logits = m(batch_images, True)
+        logits = run_model(m,batch_images, True)
         logits = tf.reshape(logits, [-1,])
 
         loss = true_dice_loss(batch_labels, logits)
        
-    grads = tape.gradient(loss, model.trainable_variables)
-    optim.apply_gradients(zip(grads, model.trainable_variables))
+    grads = tape.gradient(loss, m.trainable_variables)
+    optim.apply_gradients(zip(grads, m.trainable_variables))
 
     return loss
 
@@ -147,7 +150,7 @@ def main():
                 loss = cal_loss(m1, batch_images, batch_labels)
 
                 if count % 10 == 0:
-                    print("M1 Loss = {}, [{}/{}]".format(loss, step + 1, tr_idx))
+                    print("M1 Loss = {}, [{}/{}] (Epoch = {})".format(loss, step + 1, tr_idx, epoch))
 
                 count += 1
 
@@ -176,7 +179,7 @@ def main():
                 loss = cal_loss(m2, batch_images, batch_labels)
 
                 if count % 10 == 0:
-                    print("M2 Loss = {}, [{}/{}]".format(loss, step + 1, tr_idx))
+                    print("M2 Loss = {}, [{}/{}] (Epoch = {})".format(loss, step + 1, tr_idx, epoch))
 
                 count += 1
 
@@ -204,7 +207,7 @@ def main():
                 loss = cal_loss(m3, batch_images, batch_labels)
 
                 if count % 10 == 0:
-                    print("M3 Loss = {}, [{}/{}]".format(loss, step + 1, tr_idx))
+                    print("M3 Loss = {}, [{}/{}] (Epoch = {})".format(loss, step + 1, tr_idx, epoch))
 
                 count += 1
 
@@ -233,11 +236,11 @@ def main():
                 loss = cal_loss(m4, batch_images, batch_labels)
 
                 if count % 10 == 0:
-                    print("M4 Loss = {}, [{}/{}]".format(loss, step + 1, tr_idx))
+                    print("M4 Loss = {}, [{}/{}] (Epoch = {})".format(loss, step + 1, tr_idx, epoch))
 
                 count += 1
 
-        ckpt = tf.train.Checkpoint(m2=m2, optim=optim)
+        ckpt = tf.train.Checkpoint(m4=m4, optim=optim)
         ckpt.save(FLAGS.save_checkpoint_M4)
 
     else:
