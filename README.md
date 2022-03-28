@@ -17,7 +17,7 @@ Segmentation)
 <br/>
 
 ![image](https://user-images.githubusercontent.com/31001511/160331037-cb1a7fe0-ffa3-4838-9246-a00c9d8bdc94.png)
-![image](https://user-images.githubusercontent.com/31001511/160331360-ca66b215-08be-4a29-b52e-dd67f8c65bbe.png)
+![image](https://user-images.githubusercontent.com/31001511/160331413-1afd878b-064c-45af-9523-fe638b08e5f3.png)
 <br/>
 
 
