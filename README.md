@@ -14,3 +14,11 @@ Segmentation)
 * 비교실험에서, 비교 모델에 대해 복원한것을 학습 및 테스트 한것이 내것보다 낮음을 보여주자
 * 저조도 이미지 지금보다 약간 밝은것으로해서 또 실험을 진행하자
 * 현재 저조도 v1 CED-Net, MOdified-Unet Proposed에 대해 진행했음 (BONIROB, CWFID) --> 이제 나머지 모델에 대해 다 진행하고 rice seedling weed 혹은 다른 두 데이터로 진행할것
+<br/>
+
+![image](https://user-images.githubusercontent.com/31001511/160331037-cb1a7fe0-ffa3-4838-9246-a00c9d8bdc94.png)
+
+<br/>
+
+
+![image](https://user-images.githubusercontent.com/31001511/160331065-17069ada-6e27-4dc6-aa7c-17b280fc1bda.png)
