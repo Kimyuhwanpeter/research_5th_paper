@@ -16,9 +16,11 @@ Segmentation)
 * 현재 저조도 v1 CED-Net, MOdified-Unet Proposed에 대해 진행했음 (BONIROB, CWFID) --> 이제 나머지 모델에 대해 다 진행하고 rice seedling weed 혹은 다른 두 데이터로 진행할것
 <br/>
 
-![image](https://user-images.githubusercontent.com/31001511/160331037-cb1a7fe0-ffa3-4838-9246-a00c9d8bdc94.png)
-![image](https://user-images.githubusercontent.com/31001511/160331413-1afd878b-064c-45af-9523-fe638b08e5f3.png)
+![image](https://user-images.githubusercontent.com/31001511/160557960-8f9ce01c-d199-4fdf-9406-a12dd3c2d082.png)
+![image](https://user-images.githubusercontent.com/31001511/160557995-d162d85e-17c1-49cb-84ef-3b270a4801ce.png)
 <br/>
 
 
-![image](https://user-images.githubusercontent.com/31001511/160331065-17069ada-6e27-4dc6-aa7c-17b280fc1bda.png)
+![image](https://user-images.githubusercontent.com/31001511/160558014-63611c43-a279-4447-82c4-34c4f07a5d70.png)
+![image](https://user-images.githubusercontent.com/31001511/160558433-0461898a-4171-4696-aeb6-19e7e841e016.png)
+
