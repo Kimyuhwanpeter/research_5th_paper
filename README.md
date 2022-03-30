@@ -22,6 +22,6 @@ Segmentation)
 <br/>
 
 
-![image](https://user-images.githubusercontent.com/31001511/160558014-63611c43-a279-4447-82c4-34c4f07a5d70.png)
-![image](https://user-images.githubusercontent.com/31001511/160558433-0461898a-4171-4696-aeb6-19e7e841e016.png)
+![image](https://user-images.githubusercontent.com/31001511/160771243-7f017fd4-455e-4645-901e-6afe37fc75e6.png)
+![image](https://user-images.githubusercontent.com/31001511/160771266-2296fb65-289b-4f3a-8799-5f063abe7e27.png)
 
