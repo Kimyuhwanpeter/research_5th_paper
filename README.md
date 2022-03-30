@@ -17,7 +17,7 @@ Segmentation)
 * **이제 low light-v1으로 실험 진행할것**
 <br/>
 
-![image](https://user-images.githubusercontent.com/31001511/160557960-8f9ce01c-d199-4fdf-9406-a12dd3c2d082.png)
+![image](https://user-images.githubusercontent.com/31001511/160751290-5e0306a8-9c62-4e79-a149-9acae07bdde3.png)
 ![image](https://user-images.githubusercontent.com/31001511/160557995-d162d85e-17c1-49cb-84ef-3b270a4801ce.png)
 <br/>
 
