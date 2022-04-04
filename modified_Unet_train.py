@@ -12,19 +12,19 @@ import os
 
 FLAGS = easydict.EasyDict({"img_size": 512,
 
-                           "train_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/train.txt",
+                           "train_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/CWFID/train_fix.txt",
 
-                           "val_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/val.txt",
+                           "val_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/CWFID/val.txt",
 
-                           "test_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/test.txt",
+                           "test_txt_path": "/yuwhan/yuwhan/Dataset/Segmentation/CWFID/test.txt",
                            
-                           "label_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/raw_aug_gray_mask/",
+                           "label_path": "/yuwhan/yuwhan/Dataset/Segmentation/CWFID/aug_train_masks/",
                            
-                           "image_path": "/yuwhan/yuwhan/Dataset/Segmentation/BoniRob/low_light2/",
+                           "image_path": "/yuwhan/yuwhan/Dataset/Segmentation/CWFID/low_light/",
                            
-                           "pre_checkpoint": False,
+                           "pre_checkpoint": True,
                            
-                           "pre_checkpoint_path": "C:/Users/Yuhwan/Downloads/74/74",
+                           "pre_checkpoint_path": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/modified_Unet/CWFID_low_light/checkpoint/60",
                            
                            "lr": 0.0001,
 
@@ -38,15 +38,15 @@ FLAGS = easydict.EasyDict({"img_size": 512,
 
                            "batch_size": 2,
 
-                           "sample_images": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/modified_Unet/BoniRob_low_light/sample_images",
+                           "sample_images": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/modified_Unet/CWFID_low_light/sample_images",
 
-                           "save_checkpoint": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/modified_Unet/BoniRob_low_light/checkpoint",
+                           "save_checkpoint": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/modified_Unet/CWFID_low_light/checkpoint",
 
-                           "save_print": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/modified_Unet/BoniRob_low_light/train_out.txt",
+                           "save_print": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/modified_Unet/CWFID_low_light/train_out.txt",
 
-                           "test_images": "D:/[1]DB/[5]4th_paper_DB/crop_weed/related_work/Unet/rice_seedling_weed/test_images",
+                           "test_images": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/modified_Unet/CWFID_low_light/test_images",
 
-                           "train": True})
+                           "train": False})
 
 
 optim = tf.keras.optimizers.Adam(FLAGS.lr, beta_1=0.9, beta_2=0.99)
@@ -529,4 +529,3 @@ def main():
 
 if __name__ == "__main__":
     main()
- 
