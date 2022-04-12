@@ -22,11 +22,11 @@ FLAGS = easydict.EasyDict({"img_size": 512,
                            
                            "label_path": "/yuhwan/yuhwan/Dataset/Segmentation/Crop_weed/datasets_IJRR2017/raw_aug_gray_mask/",
                            
-                           "image_path": "/yuhwan/yuhwan/Dataset/Segmentation/Crop_weed/datasets_IJRR2017/low_light2/",
+                           "image_path": "/yuhwan/yuhwan/Dataset/Segmentation/Crop_weed/datasets_IJRR2017/low_light/",
                            
                            "pre_checkpoint": False,
                            
-                           "pre_checkpoint_path": "/yuhwan/yuhwan/checkpoint/Segmenation/V3/BoniRob/checkpoint/399/399",
+                           "pre_checkpoint_path": "/yuhwan/yuhwan/checkpoint/Segmenation/V3/CWFID_v1/checkpoint/25",
                            
                            "lr": 0.0001,
 
@@ -40,11 +40,11 @@ FLAGS = easydict.EasyDict({"img_size": 512,
 
                            "batch_size": 4,
 
-                           "sample_images": "/yuhwan/yuhwan/checkpoint/Segmenation/V3/BoniRob/sample_images",
+                           "sample_images": "/yuhwan/yuhwan/checkpoint/Segmenation/V3_ablation/without_attention/BoniRob_v1/sample_images",
 
-                           "save_checkpoint": "/yuhwan/yuhwan/checkpoint/Segmenation/V3/BoniRob/checkpoint",
+                           "save_checkpoint": "/yuhwan/yuhwan/checkpoint/Segmenation/V3_ablation/without_attention/BoniRob_v1/checkpoint",
 
-                           "save_print": "/yuhwan/yuhwan/checkpoint/Segmenation/V3/BoniRob/train_out.txt",
+                           "save_print": "/yuhwan/yuhwan/checkpoint/Segmenation/V3_ablation/without_attention/BoniRob_v1/train_out.txt",
 
                            "train_loss_graphs": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/V2/BoniRob/train_loss.txt",
 
@@ -54,7 +54,9 @@ FLAGS = easydict.EasyDict({"img_size": 512,
 
                            "val_acc_graphs": "/yuwhan/Edisk/yuwhan/Edisk/Segmentation/V2/BoniRob/val_acc.txt",
 
-                           "train": True})
+                           "train": True,
+                           
+                           "test_images": "/yuhwan/yuhwan/checkpoint/Segmenation/V3_ablation/without_attention/BoniRob_v1/test_images"})
 
 
 optim = tf.keras.optimizers.Adam(FLAGS.lr, beta_1=0.5)
